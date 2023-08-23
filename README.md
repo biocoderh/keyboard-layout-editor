@@ -1,3 +1,16 @@
+This is a fork of [keyboard-layout-editor](https://github.com/ijprest/keyboard-layout-editor) with some additional features.
+
+Key Access Benchmark
+--------------------
+![image](key-access-benchmark.png)
+
+
+All **decal** keys are ignored.
+Any empty key would be recognized as **space**.
+To reset the timer just press any missmatch key.
+
+Keep in mind, some keys like **Alt** or **Win** would interact with Browser/OS, solution is alternative layout for tests.
+
 keyboard-layout-editor
 ----------------------
 [Keyboard-layout-editor.com](http://www.keyboard-layout-editor.com) (KLE) is a web
@@ -39,7 +52,7 @@ Required Tools:
 * Grunt: ```npm install -g grunt-cli```
 * Protractor: ```npm install -g protractor```
 * Jasmine: ```npm install -g jasmine```
-* Uglifyjs: ```npm install -g uglifyjs```
+* Uglifyjs: ```npm install -g uglify-js```
 * Stylus: ```npm install -g stylus```
 * Jison: ```npm install -g jison```
 * Git-utils: ```npm install git-utils -g ```
@@ -52,6 +65,11 @@ Build:
 
 * ```make```
 * ```make fonts```
+
+Sere:
+
+* ```npm install -g serve```
+* ```serve -l 8080```
 
 Test:
 

@@ -50,6 +50,20 @@ var $renderKey = (typeof(exports) !== 'undefined') ? exports : {};
 		return (/\b(SA|DSA|DCS|OEM|CHICKLET|FLAT)\b/.exec(key.profile) || [""])[0];
 	}
 
+	function parseColor(value) {
+		if (value[0] === "#") return $color.hex(value);
+		if (value.substring(0, 3) === "rgb") {
+			const colors = value.split("(")[1].split(")")[0].split(",");
+			return {
+				r: colors[0],
+				g: colors[1],
+				b: colors[2]
+			};
+		}
+
+		return value;
+	}
+
 	function getRenderParms(key, sizes) {
 		var parms = {};
 
@@ -97,8 +111,18 @@ var $renderKey = (typeof(exports) !== 'undefined') ? exports : {};
 		parms.textcapx       = parms.innercapx       + sizes.padding;
 		parms.textcapy       = parms.innercapy       + sizes.padding;
 
-		parms.darkColor = key.color;
-		parms.lightColor = lightenColor($color.hex(key.color), 1.2).hex();
+		let color = key.color;
+		let lightColor = key.color;
+
+		if (key.hasOwnProperty("accessBenchmark") && key.accessBenchmark.color !== null) {
+			color = key.accessBenchmark.color;
+			lightColor = key.accessBenchmark.color;
+			if (key.accessBenchmark.lightColor !== null) lightColor = key.accessBenchmark.lightColor;
+		}
+
+		// Colors
+		parms.darkColor = color;
+		parms.lightColor = lightenColor(parseColor(lightColor), 1.2).hex();
 
 		// Rotation matrix about the origin
 		parms.origin_x = sizes.unit * key.rotation_x;

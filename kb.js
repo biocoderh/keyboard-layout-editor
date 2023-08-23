@@ -420,7 +420,7 @@
 						var render = false;
 						for(var i = 0; i < 12; i += 3) // horizontal alignment
 							render = alignSingleRow(key, flags & align.hmask, i, i+1, i+2) || render;
-						for(var i = 0; i < 3; i += 1) // vertical alignment
+						for(var i = 0; i < 3; i += 1) // vertical alignments
 							render = alignSingleRow(key, (flags & align.vmask) >> 4, i, i+3, i+6) || render;
 						if(render) renderKey(key);
 					}
@@ -1735,7 +1735,383 @@
 			editor.setFontSize(14);
 			editor.renderer.setVScrollBarAlwaysVisible(true);
 		};
+
+		/*
+		 * Key Access Benchmark
+		 */
+
+		function rand(min, max) {
+			return Math.floor(Math.random() * (max - min + 1) ) + min;
+		}
+
+		function getAvg(values) {
+			return Math.trunc(values.reduce((m, x, i) => m + (x - m) / (i + 1), 0));
+		}
+
+		function shuffle(array) {
+			let currentIndex = array.length,  randomIndex;
+		  
+			// While there remain elements to shuffle.
+			while (currentIndex != 0) {
+		  
+				// Pick a remaining element.
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex--;
+			
+				// And swap it with the current element.
+				[array[currentIndex], array[randomIndex]] = [
+					array[randomIndex], array[currentIndex]];
+			}
+		  
+			return array;
+		}
+
+		function formatKeyCodes(value) {
+			const key = value.toLowerCase();
+			switch(key) {
+				case "del": return "delete";
+				case "ctrl":
+				case "⎈":
+					return "control";
+				case "⎇":
+					return "alt"
+				case "super":
+				case "meta":
+				case "win":
+				case "cmd":
+				case "command":
+				case "⌘":
+					return "os";
+				case "back space":
+				case "back<br>space":
+				case "⌫":
+					return "backspace";
+				case "caps lock":
+				case "caps<br>lock":
+					return "capslock";
+				case "esc":
+					return "escape";
+				// nav
+				case "page up":
+				case "page<br>up":
+					return "pageup";
+				case "page down":
+				case "page<br>down":
+					return "pagedown";
+				case "left":
+				case "←":
+				case "⇦":
+					return "arrowleft";
+				case "right":
+				case "→":
+				case "⇨":
+					return "arrowright";
+				case "up":
+				case "↑":
+				case "⇧":
+					return "arrowup";
+				case "down":
+				case "↓":
+				case "⇩":
+					return "arrowdown";
+				default: return key;
+			}
+		}
+
+		function getBenchColor(n, max) {
+			const r = Math.trunc((255 * n) / max);
+			const g = Math.trunc(255 - (255 * n) / max);
+			const b = 0;
+
+			return 'rgb(' + r + ',' + g + ',' + b + ')';
+		}
+
+		$scope.keyAccessBenchmark = {
+			labelIds: [
+				true, true, true,
+				true, true, true,
+				true, true, true,
+				true, true, true
+			],
+			showResults: true,
+			showColors: true,
+			rankBy: "avg",
+			fullRandom: false,
+			minDelay: 1000,
+			maxDelay: 2000,
+			running: false,
+			testing: false,
+			key: null,
+			count: 0,
+			cycles: 0,
+			getKeys: () => $scope.keys().filter((key) => !key.decal),
+			keyProps: (key) => {
+				if (!key.hasOwnProperty("accessBenchmark")) {
+					key.accessBenchmark = {
+						active: false,
+						ready: false,
+						results: [],
+						min: null,
+						max: null,
+						avg: null,
+						rank: null,
+						labels: [],
+						color: null,
+						lightColor: null,
+					}
+				}
+
+				return key.accessBenchmark;
+			},
+			getKeyCodes: function(key) {
+				if (key.labels.every((value) => value === "")) return ["space"];
+
+				return this.labelIds.map((state, id) => {
+					if (state && key.labels[id] !== undefined) {
+						return formatKeyCodes(key.labels[id]);
+					}
+				});
+			},
+			getEventKey: function(event) {
+				if (event.code === "Space") return "space";
+				return event.key.toLowerCase();
+			},
+			getNextKey: function() {
+				const keys = shuffle([...this.getKeys()])
+					.sort((a, b) => this.keyProps(a).results.length - this.keyProps(b).results.length);
+
+				let index, key;
+
+				do {
+					index = this.fullRandom ? rand(0, keys.length - 1) : rand(0, 1);
+					key = keys.at(index);
+				} while (this.key !== null && this.key.$$hashKey === key.$$hashKey)
+
+				this.key = key;
+				return this.key;
+			},
+			toggle: function() {
+				this.running = !this.running;
+				this.loop();
+
+				if (this.running) {
+					if (this.testing) {
+						this.test();
+					} else {
+						window.addEventListener("keydown", this.eventListener.bind(this));
+					}
+				} else {
+					this.testing || window.removeEventListener("keydown", this.eventListener);
+				}
+			},
+			reset: function() {
+				if (!confirm("Are you really want to reset all key-travel benchmark results?")) return;
+
+				this.count = 0;
+				this.cycles = 0;
+				
+				this.getKeys().forEach((key) => {
+					delete key.accessBenchmark;
+					renderKey(key);
+				});
+			},
+			test: function() {
+				if (this.running) {
+					setTimeout(() => {
+						if (!this.running) return;
+						this.eventListener();
+						this.test();
+					}, rand(100, 300));
+				}
+			},
+			loop: function(key) {
+				if (this.key !== null) {
+					this.keyProps(this.key).active = false;
+					this.keyProps(this.key).ready = false;
+				}
+
+				if (this.running) {
+					key = key || this.getNextKey();
+					this.keyProps(key).active = true;
+					this.keyProps(key).ready = false;
+
+					setTimeout(() => {
+						if (!this.running) return;
+						this.keyProps(key).ready = true;
+						this.keyProps(key).timestamp = Date.now();
+						this.renderKey(key);
+						$scope.$evalAsync();
+					}, rand(this.minDelay, this.maxDelay));
+				}
+
+				this.update();
+				$scope.$evalAsync();
+			},
+			eventListener: function(event) {
+				event && event.preventDefault();
+
+				const props = this.keyProps(this.key);
+				if (!props.ready) return;
+
+				if (!this.testing) {
+					const keyCodes = this.getKeyCodes(this.key);
+					const eventKey = this.getEventKey(event);
+
+					if (!keyCodes.includes(eventKey)) return this.loop(this.key);
+				}
+
+				if (props.results.length === 0) this.count++;
+
+				props.results.push(Date.now() - props.timestamp);
+				props.min = Math.min(...props.results);
+				props.max = Math.max(...props.results);
+				props.avg = getAvg(props.results);
+
+				this.loop();
+			},
+			renderKey: function(key) {
+				const props = this.keyProps(key);
+
+				key.labels[11] = key.labels[11] || ""; // force iterate labels render loop
+
+				props.labels = [];
+				props.color = null;
+				props.lightColor = null;
+
+				if (props.active) {
+					props.color = props.ready ? "#00ffff" : "#ff00ff";
+					props.lightColor = props.ready ? "#ff00ff" : "#00ffff";
+				} else if (props.results.length > 0) {
+					if (this.showResults) {
+						props.labels[0] = props.rank.toString();
+						props.labels[3] = props.min.toString() + "ms";
+						props.labels[6] = props.avg.toString() + "ms";
+					}
+
+					if (this.showColors) props.color = getBenchColor(props.rank - 1, this.count);
+				}
+
+				renderKey(key);
+			},
+			update: function() {
+				let cycles = Infinity;
+
+				[...this.getKeys()].sort((a, b) => {
+					if (this.keyProps(a)[this.rankBy] === null) return 1;
+					if (this.keyProps(b)[this.rankBy] === null) return -1;
+					return this.keyProps(a)[this.rankBy] - this.keyProps(b)[this.rankBy];
+				}).forEach((key, i) => {
+					const props = this.keyProps(key);
+					props.rank = i + 1;
+					cycles = Math.min(cycles, props.results.length)
+					this.renderKey(key);
+				});
+
+				this.cycles = cycles;
+			}
+		}
 	}]);
+
+	// Hack to disable app keypress handling while benchmarking
+	// https://github.com/angular-ui/angular-ui-OLDREPO/blob/e45763dbc2e28654e130e45116a001718c1a972d/modules/directives/keypress/keypress.js
+	kbApp.factory('keypressHelper', ['$parse', function keypress($parse){
+		var keysByCode = {
+		  8: 'backspace',
+		  9: 'tab',
+		  13: 'enter',
+		  27: 'esc',
+		  32: 'space',
+		  33: 'pageup',
+		  34: 'pagedown',
+		  35: 'end',
+		  36: 'home',
+		  37: 'left',
+		  38: 'up',
+		  39: 'right',
+		  40: 'down',
+		  45: 'insert',
+		  46: 'delete'
+		};
+	  
+		var capitaliseFirstLetter = function (string) {
+		  return string.charAt(0).toUpperCase() + string.slice(1);
+		};
+	  
+		return function(mode, scope, elm, attrs) {
+		  var params, combinations = [];
+		  params = scope.$eval(attrs['ui'+capitaliseFirstLetter(mode)]);
+	  
+		  // Prepare combinations for simple checking
+		  angular.forEach(params, function (v, k) {
+			var combination, expression;
+			expression = $parse(v);
+	  
+			angular.forEach(k.split(' '), function(variation) {
+			  combination = {
+				expression: expression,
+				keys: {}
+			  };
+			  angular.forEach(variation.split('-'), function (value) {
+				combination.keys[value] = true;
+			  });
+			  combinations.push(combination);
+			});
+		  });
+	  
+		  // Check only matching of pressed keys one of the conditions
+		  elm.bind(mode, function (event) {
+
+			if (scope.keyAccessBenchmark.running) return;
+
+			// No need to do that inside the cycle
+			var altPressed = !!(event.metaKey || event.altKey);
+			var ctrlPressed = !!event.ctrlKey;
+			var shiftPressed = !!event.shiftKey;
+			var keyCode = event.keyCode;
+	  
+			// normalize keycodes
+			if (mode === 'keypress' && !shiftPressed && keyCode >= 97 && keyCode <= 122) {
+			  keyCode = keyCode - 32;
+			}
+	  
+			// Iterate over prepared combinations
+			angular.forEach(combinations, function (combination) {
+	  
+			  var mainKeyPressed = combination.keys[keysByCode[event.keyCode]] || combination.keys[event.keyCode.toString()];
+	  
+			  var altRequired = !!combination.keys.alt;
+			  var ctrlRequired = !!combination.keys.ctrl;
+			  var shiftRequired = !!combination.keys.shift;
+	  
+			  if (
+				mainKeyPressed &&
+				( altRequired == altPressed ) &&
+				( ctrlRequired == ctrlPressed ) &&
+				( shiftRequired == shiftPressed )
+			  ) {
+				// Run the function
+				scope.$apply(function () {
+				  combination.expression(scope, { '$event': event });
+				});
+			  }
+			});
+		  });
+		};
+	}]);
+
+	kbApp.directive('convertToNumber', function() {
+		return {
+		  require: 'ngModel',
+		  link: function(scope, element, attrs, ngModel) {
+			ngModel.$parsers.push(function(val) {
+			  return val != null ? parseInt(val, 10) : null;
+			});
+			ngModel.$formatters.push(function(val) {
+			  return val != null ? '' + val : null;
+			});
+		  }
+		};
+	});
 
 	// Simple modal-popup controller
 	kbApp.controller('modalCtrl', function($scope, $modalInstance, params) {

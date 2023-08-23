@@ -63,7 +63,7 @@ Nav Bar / Header
     </button>
 
     <!-- Main branding icon/title -->
-    <a class="navbar-brand" href="#"><i class="fa fa-keyboard-o"></i> keyboard-layout-editor.com</a>
+    <a class="navbar-brand" href="#"><i class="fa fa-keyboard-o"></i> keyboard-layout-editor</a>
   </div>
   <div class="collapse navbar-collapse navbar-ex1-collapse">
 
@@ -263,6 +263,7 @@ Nav Bar / Header
     <li ng-class="{active:selTab==2}"><a ng-click="selTab=2" data-toggle="tab"><i class="fa fa-code"></i> Raw data</a></li>
     <li ng-class="{active:selTab==4}"><a ng-click="selTab=4" data-toggle="tab"><i class="fa fa-file-text-o"></i> Summary</a></li>
     <li ng-class="{active:selTab==5}"><a ng-click="selTab=5" data-toggle="tab"><i class="fa fa-wrench"></i> Tools</a></li>
+    <li ng-class="{active:selTab==6}"><a ng-click="selTab=6" data-toggle="tab"><i class="fa fa-bolt"></i> Key Access Benchmark</a></li>
   </ul>
   <div id="tab-content" class='col-md-12 col-lg-12 row' ui-keydown="{esc:'focusKb()'}" ng-cloak>
 
@@ -902,6 +903,132 @@ Nav Bar / Header
 
     </div>
 
+    <div id="key-travel-benchmark" ng-class="{hidden:selTab!=6}">
+
+      <div class="col-md-1 col-lg-1 row">
+        <h5>Key codes to use:</h5>
+        <div class="keycap" id="label-move-src">
+          <div class="keyborder"></div>
+          <div class="keylabels">
+            <div ng-repeat="i in [0,1,2,3,4,5,6,7,8,9,10,11]" class="keylabel keylabel{{i}}">
+              <div><input type='checkbox' name='id' ng-model="keyAccessBenchmark.labelIds[i]" ng-value='i'></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-1 col-lg-1 row">
+        <h5>Results format:</h5>
+        <div class="keycap" id="label-move-src">
+          <div class="keyborder"></div>
+          <div class="keylabels">
+            <div class="keylabel keylabel0"><div>Ranking (#)</div></div>
+            <div class="keylabel keylabel3"><div>Minimum (ms)</div></div>
+            <div class="keylabel keylabel6"><div>Average (ms)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-1 col-lg-1 row">
+        <div class="form-group form-group-sm form-horizontal">
+          <div>
+            <label class="control-label text-nowrap" style='margin-left: 5px;' for="showResults">Show:</label>
+          </div>
+          <div class="checkbox hint--top hint--rounded" data-hint="Show results data on keycap.">
+            <label style='margin-bottom: -3px;'>
+              <input type="checkbox" id="showResults" class="checkbox"
+                ng-model="keyAccessBenchmark.showResults"
+                ng-change="keyAccessBenchmark.update()"
+              >
+              Results
+            </label>
+          </div>
+
+          <div class="checkbox hint--top hint--rounded" data-hint="Visualize results with keycap color.">
+            <label style='margin-bottom: -3px;'>
+              <input type="checkbox" id="showColors" class="checkbox"
+                ng-model="keyAccessBenchmark.showColors"
+                ng-change="keyAccessBenchmark.update()"
+              >
+              Colors
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group form-group-sm form-horizontal">
+          <label class="control-label text-nowrap" for="rankBy">Rank by:</label>
+            <div class="hint--top hint--rounded" data-hint="Specify which metric to use for ranking order.">
+              <select id="rankBy" class="form-control input-sm dropdown"
+                ng-model="keyAccessBenchmark.rankBy"
+                ng-change="keyAccessBenchmark.update()"
+              >
+                <option value="min">Minimum</option>
+                <option value="max">Maximum</option>
+                <option value="avg">Average</option>
+              </select>
+            </div>
+        </div>
+      </div>
+
+      <div class="col-md-2 col-lg-2 row">
+
+        <div class="form-group form-group-sm form-horizontal">
+          <button type="button" class="btn {{ keyAccessBenchmark.running ? 'btn-danger' : 'btn-success' }}"
+            ng-click="keyAccessBenchmark.toggle()"
+            ng-disabled="keys().length < 2"
+          >
+            <i class="fa {{ keyAccessBenchmark.running ? 'fa-stop' : 'fa-play' }}"></i>
+            {{ keyAccessBenchmark.running ? "Stop" : "Start" }}
+          </button>
+
+          <button type="button" class="btn btn-danger"
+            ng-click="keyAccessBenchmark.reset()"
+            ng-disabled="keyAccessBenchmark.running"
+          >
+            <i class="fa fa-refresh"></i>
+            Reset
+          </button>
+
+          <div class="hint--top hint--rounded" data-hint="Amount of all keys benchmark cycles.">
+            <label style='margin-left: 5px;'>
+              Cycles: {{ keyAccessBenchmark.cycles }}
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group form-group-sm form-horizontal">
+          <div class="checkbox hint--top hint--rounded" data-hint="Full random select keys, otherwise shuffle keys and select depend on benchmark counter.">
+            <label style='margin-bottom: -3px;'>
+              <input type="checkbox" id="fullRandom" class="checkbox"
+                ng-model="keyAccessBenchmark.fullRandom"
+              >
+              Full random
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group form-group-sm form-horizontal">
+          <label class="control-label text-nowrap" style='margin-right: 15px;' for="minDelay">Min delay (ms):</label>
+          <div class="form-inline hint--top hint--rounded" data-hint="Specify minimum delay time(ms) before key ready.">
+            <input id="minDelay" class="form-control input-sm" style="max-width:64px" size="6" type='number' min="0" max="{{keyAccessBenchmark.maxDelay}}" step="100"
+              ng-model="keyAccessBenchmark.minDelay"
+            >
+          </div>
+        </div>
+
+        <div class="form-group form-group-sm form-horizontal">
+          <label class="control-label text-nowrap" style='margin-right: 15px;' for="maxDelay">Max delay (ms):</label>
+          <div class="form-inline hint--top hint--rounded" data-hint="Specify maximum delay time(ms) before key ready.">
+            <input id="maxDelay" class="form-control input-sm" style="max-width:64px" size="6" type='number' min="{{keyAccessBenchmark.minDelay}}" step="100"
+              ng-model="keyAccessBenchmark.maxDelay"
+            >
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
   </div> <!-- END OF TAB CONTENT -->
 
   <div class="row" style="margin-top:1em;margin-left:0px;">
@@ -938,8 +1065,8 @@ Footer
   </div>
   <div style="float:right;">
     <a href="#" ng-click="showHelp($event)"><i class="fa fa-question-circle"></i> Help &amp; keyboard shortcuts</a><br/>
-    <a href="https://github.com/ijprest/keyboard-layout-editor/issues" target="_blank"><i class="fa fa-bug"></i> Found a bug?</a><br/>
-    <a href="https://github.com/ijprest/keyboard-layout-editor" target="_blank"><i class="fa fa-github"></i> Code hosted on GitHub</a><br/>
+    <a href="https://github.com/biocoderh/keyboard-layout-editor/issues" target="_blank"><i class="fa fa-bug"></i> Found a bug?</a><br/>
+    <a href="https://github.com/biocoderh/keyboard-layout-editor" target="_blank"><i class="fa fa-github"></i> Code hosted on GitHub</a><br/>
   </div>
 </div>
 </div>
@@ -1256,6 +1383,11 @@ DOT.js Templates
 
     <div style='left: {{=parms.innercapx}}px; top: {{=parms.innercapy}}px; width: {{=parms.innercapwidth}}px; height: {{=parms.innercapheight}}px; padding: {{=sizes.padding}}px;' class='keylabels'>
       {{~key.labels :label:i}}
+        {{
+          if (key.hasOwnProperty("accessBenchmark") && key.accessBenchmark.labels.hasOwnProperty(i)) {
+            label = key.accessBenchmark.labels[i]
+          }
+        }}
         {{? label && label != "" }}
           {{ var sanitizedLabel = ""; try { sanitizedLabel = $sanitize(label.replace(/<([^a-zA-Z\/]|$)/,"&lt;$1")); } catch(e) {console.log(e);} }}
           {{? sanitizedLabel !== "" }}
@@ -1263,7 +1395,9 @@ DOT.js Templates
             {{ var textColor = key.textColor[i] || key.default.textColor; }}
             {{ if(i<9) textColor = lightenColor($color.hex(textColor), 1.2).hex(); }}
             <div class='keylabel keylabel{{=i}} textsize{{=textSize}}' style='color:{{=textColor}}; width:{{=parms.textcapwidth}}px; height:{{=parms.textcapheight}}px;'>
-              <div style='width:{{=parms.textcapwidth}}px; max-width:{{=parms.textcapwidth}}px; height:{{=parms.textcapheight}}px;'>{{=sanitizedLabel}}</div>
+              <div style='width:{{=parms.textcapwidth}}px; max-width:{{=parms.textcapwidth}}px; height:{{=parms.textcapheight}}px;'>
+               {{=sanitizedLabel}}
+              </div>
             </div>
           {{??}}
             <div class="hint--top hint--rounded" data-hint="Error: Invalid HTML in legend field."><i class="fa fa-times-circle"></i></div>
