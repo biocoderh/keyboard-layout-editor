@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install global dependencies
-        run: npm install -g bower grunt-cli protractor jasmine uglify-js stylus jison git-utils
+        run: npm install -g bower protractor jasmine uglify-js stylus jison git-utils
       - name: Installing prerequisite components
         run: make install
       - name: Build
