@@ -36,6 +36,9 @@ jobs:
         run: make install
       - name: Build
         run: make
+
+      - name: Install fontforge
+        run: sudo apt-get install -y fontforge
       - name: Build fonts
         run: make fonts
 
