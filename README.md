@@ -13,7 +13,7 @@ Keep in mind, some keys like **Alt** or **Win** would interact with Browser/OS, 
 
 keyboard-layout-editor
 ----------------------
-[Keyboard-layout-editor.com](http://www.keyboard-layout-editor.com) (KLE) is a web
+[Keyboard-layout-editor](https://biocoderh.github.io/keyboard-layout-editor) (KLE) is a web
 application that enables the editing of keyboard-layouts, i.e., the position
 and appearance of each physical key.
 

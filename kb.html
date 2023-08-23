@@ -108,7 +108,7 @@ Nav Bar / Header
       <li><a href="#" ng-click="showOptions()"><i class="fa fa-cog"></i> Options</a></li>
       <!-- Permalink button -->
       <li><a ng-href="{{getPermalink()}}" target="_blank" ng-click="dirty = false"><i class="fa fa-link"></i> Permalink</a></li>
-      <!-- User button -->
+      <!-- User button
       <li ng-hide="user"><a href="#" ng-click="userLogin()"><i class="fa fa-github"></i> Sign in with GitHub</a></li>
       <li ng-hide="!user" class="dropdown" dropdown ng-cloak>
         <a class="dropdown-toggle" dropdown-toggle><span ng-bind-html="user.avatar"></span> {{user.name}} <b class="caret"></b></a>
@@ -119,7 +119,7 @@ Nav Bar / Header
           <li><a href="https://github.com/settings/connections/applications/{{githubClientId}}" target="_blank"><i class="fa fa-key"></i> Manage GitHub Permissions</a></li>
           <li><a ng-click="userLogout()" href="#"><i class="fa fa-sign-out"></i> Log out</a></li>
         </ul>
-      </li>
+      </li> -->
     </ul>
   </div>
 </nav>
@@ -1060,7 +1060,7 @@ Footer
 <div class="container">
   <div class="text-muted credit" style="float:left">
     Keyboard Layout Editor v{{version}} (<a href='#' ng-click="showMarkdown('CHANGELOG.md', $event)">changelog</a>)<br/>
-    Copyright &copy; 2013-2018 &mdash; Ian Prest (<a href='#' ng-click="showMarkdown('CONTRIB.md', $event)">and contributors</a>)<br/>
+    Copyright &copy; 2013-2018 &mdash; Ian Prest, 2023 Biocoderh (<a href='#' ng-click="showMarkdown('CONTRIB.md', $event)">and contributors</a>)<br/>
     All rights reserved. (<a href='#' ng-click="showMarkdown('LICENSE.md', $event)">LICENSE</a>)
   </div>
   <div style="float:right;">
