@@ -1769,6 +1769,7 @@
 		function formatKeyCodes(value) {
 			const key = value.toLowerCase();
 			switch(key) {
+				case "⎵": return "space";
 				case "del": return "delete";
 				case "ctrl":
 				case "⎈":
