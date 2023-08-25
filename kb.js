@@ -1770,6 +1770,8 @@
 			const key = value.toLowerCase();
 			switch(key) {
 				case "⎵": return "space";
+				case "↹": return "tab";
+				case "↵": return "enter";
 				case "del": return "delete";
 				case "ctrl":
 				case "⎈":
