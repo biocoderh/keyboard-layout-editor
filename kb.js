@@ -1791,13 +1791,16 @@
 					return "backspace";
 				case "caps lock":
 				case "caps<br>lock":
+				case "⇪"
 					return "capslock";
 				case "esc":
 					return "escape";
 				// nav
+				case "pgup"
 				case "page up":
 				case "page<br>up":
 					return "pageup";
+				case "pgdn"
 				case "page down":
 				case "page<br>down":
 					return "pagedown";
