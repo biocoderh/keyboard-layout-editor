@@ -1188,7 +1188,8 @@
 			});
 		};
 		$scope.loadSample = function(sample) {
-			$http.get(sample).success(function(data) {
+			const pathBase = window.location.pathname.startsWith("/keyboard-layout-editor/") ? "/keyboard-layout-editor/" : "";
+			$http.get(pathBase + sample).success(function(data) {
 				$scope.loadPreset(data, sample);
 			}).error(function() {
 				$scope.loadError = true;
